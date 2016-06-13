@@ -1,0 +1,51 @@
+---
+classes:
+  add:
+  - concat
+  - logrotate
+  - module_data
+  - puppi
+  - stdlib 
+  - ulimit
+
+  remove:
+  - asf999
+  - datadog_agent
+  - fail2ban_asf
+  - ssh_asf
+  - zmanda_asf
+
+directories:
+ - 'data/nodes'
+ - 'manifests'
+ - 'modules'
+
+files:
+  Vagrantfile: |
+    Vagrant.configure(2) do |config|
+      config.vm.box = "<%= config[hostname]['box'] %>"
+
+      config.vm.network "private_network", ip: "192.168.119.2"
+
+      config.vm.hostname = '<%= hostname %>.apache.org'
+
+      config.vm.provider "virtualbox" do |v|
+        v.memory = 2048
+      end
+
+      config.vm.provision :shell,
+        inline: 'gem list deep_merge -i || gem install deep_merge'
+
+      config.vm.provision 'puppet' do |puppet|
+        puppet.manifest_file = 'site.pp'
+        puppet.hiera_config_path = 'hiera.yaml'
+        puppet.module_path = 'modules'
+      end
+    end
+
+whimsy-vm3:
+  box: 'ubuntu/trusty64'
+  classes:
+    add:
+    - vcsrepo
+    - gnupg
