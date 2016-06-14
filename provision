@@ -31,7 +31,8 @@ end
 
 # read config file
 config = YAML.load_file(__FILE__ + '.yaml')
-config['classes'].deep_merge! config[hostname]['classes']
+config['classes'].deep_merge! config[hostname]['classes'] if config[hostname]
+osname = config.fetch('hostname', {}).fetch('box', 'ubuntu/trusty64')
 
 # create directory
 FileUtils.mkdir_p hostname
@@ -67,18 +68,19 @@ end
 
 # adjust vhosts
 vhosts = node['vhosts_whimsy::vhosts::vhosts']
-vhosts['whimsy-vm-80'] = vhosts['whimsy-vm-443']
-vhosts['whimsy-vm-80']['port'] = 80
-vhosts['whimsy-vm-80']['ssl'] = false
-vhosts['whimsy-vm-80'].delete('ssl_cert')
-vhosts['whimsy-vm-80'].delete('ssl_key')
-vhosts['whimsy-vm-80'].delete('ssl_chain')
-vhosts.delete('whimsy-vm-443')
+if vhosts
+  vhosts['whimsy-vm-80'] = vhosts['whimsy-vm-443']
+  vhosts['whimsy-vm-80']['port'] = 80
+  vhosts['whimsy-vm-80']['ssl'] = false
+  vhosts['whimsy-vm-80'].delete('ssl_cert')
+  vhosts['whimsy-vm-80'].delete('ssl_key')
+  vhosts['whimsy-vm-80'].delete('ssl_chain')
+  vhosts.delete('whimsy-vm-443')
+end
 
 # output data node
 update_file "data/nodes/#{hostname}.apache.org.yaml", YAML.dump(node)
 
-osname = config[hostname]['box'] || 'ubuntu/trusty64'
 osname.sub! 'trusty64', '1404'
 
 # copy and filter os.yaml
