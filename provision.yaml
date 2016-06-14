@@ -1,24 +1,11 @@
 ---
 classes:
-  add:
-  - concat
-  - logrotate
-  - module_data
-  - puppi
-  - stdlib 
-  - ulimit
-
   remove:
   - asf999
   - datadog_agent
   - fail2ban_asf
   - ssh_asf
   - zmanda_asf
-
-directories:
- - 'data/nodes'
- - 'manifests'
- - 'modules'
 
 files:
   Vagrantfile: |
@@ -39,13 +26,9 @@ files:
       config.vm.provision 'puppet' do |puppet|
         puppet.manifest_file = 'site.pp'
         puppet.hiera_config_path = 'hiera.yaml'
-        puppet.module_path = 'modules'
+        puppet.module_path = ['modules', '3rdParty']
       end
     end
 
 whimsy-vm3:
   box: 'ubuntu/trusty64'
-  classes:
-    add:
-    - vcsrepo
-    - gnupg

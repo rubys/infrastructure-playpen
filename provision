@@ -33,10 +33,9 @@ end
 config = YAML.load_file(__FILE__ + '.yaml')
 config['classes'].deep_merge! config[hostname]['classes']
 
-# create directories
+# create directory
 FileUtils.mkdir_p hostname
 Dir.chdir hostname
-config['directories'].each {|dir| FileUtils.mkdir_p dir}
 
 # create files
 config['files'].each do |file, contents|
@@ -45,7 +44,7 @@ config['files'].each do |file, contents|
 end
 
 # copy manifests/site.pp
-File.write "manifests/site.pp", File.read("#{ip}/manifests/site.pp")
+update_file "manifests/site.pp", File.read("#{ip}/manifests/site.pp")
 
 # filter hiera.yaml
 hiera = YAML.load(File.read("#{ip}/hiera.yaml").gsub('%{asfcolo}', 'vagrant'))
@@ -79,7 +78,7 @@ vhosts.delete('whimsy-vm-443')
 # output data node
 update_file "data/nodes/#{hostname}.apache.org.yaml", YAML.dump(node)
 
-osname = config[hostname]['box']
+osname = config[hostname]['box'] || 'ubuntu/trusty64'
 osname.sub! 'trusty64', '1404'
 
 # copy and filter os.yaml
@@ -97,16 +96,9 @@ common['classes'].delete_if do |name|
 end
 update_file "data/common.yaml", YAML.dump(common)
 
-# create modules
-classes = config['classes']['add']
-[node, os, common].each do |level|
-  classes += level['classes'].map {|c| c.split(':').first}
-end
-classes.uniq.each do |name|
-  Dir["#{ip}/{modules,3rdParty}/#{name}"].each do |path|
-    system 'rsync', '-a', path, 'modules'
-  end
-end
+# copy modules
+system 'rsync', '-a', '--delete', "#{ip}/modules/", 'modules/'
+system 'rsync', '-a', '--delete', "#{ip}/3rdParty/", '3rdParty/'
 
 # provision updates
 if `vagrant status`.include? 'running'
