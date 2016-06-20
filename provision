@@ -20,6 +20,10 @@ rescue Errno::ENOENT
   ip = ASF::Git['infrastructure-puppet']
 end
 
+# ensure infrastructure-puppet is set up
+Dir.chdir(ip) {system 'bundle install'} unless File.exist? "#{ip}/Gemfile.lock"
+Dir.chdir(ip) {system 'bin/pull'} unless File.exist? "#{ip}/3rdParty"
+
 # utility method to update a file
 def update_file(filename, contents)
   FileUtils.mkdir_p File.dirname(filename) if filename.include? '/'
