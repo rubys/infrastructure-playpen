@@ -11,6 +11,7 @@ require 'erb'
 require 'deep_merge'
 
 hostname = ARGV[0] || 'whimsy-vm3'
+playpens = ENV['PLAYPEN_HOME'] || "#{Dir.home}/playpens"
 
 # find infrastructure-puppet
 begin
@@ -39,6 +40,7 @@ config['classes'].deep_merge! config[hostname]['classes'] if config[hostname]
 osname = config.fetch('hostname', {}).fetch('box', 'ubuntu/trusty64')
 
 # create directory
+Dir.chdir playpens
 FileUtils.mkdir_p hostname
 Dir.chdir hostname
 
