@@ -112,6 +112,33 @@ update_file "data/common.yaml", YAML.dump(common)
 system 'rsync', '-a', '--delete', "#{ip}/modules/", 'modules/'
 system 'rsync', '-a', '--delete', "#{ip}/3rdParty/", '3rdParty/'
 
+# tailor slapd.conf
+if node['classes'] and node['classes'].include? 'ldapserver'
+  conf = File.read('modules/ldapserver/templates/slapd.conf.erb')
+
+  # set rootpw to 'password'
+  conf.sub! '<%= rootpw %>', '{SSHA}COYnLoyStL8yU/QSJGLvM6UV7s3rccAI'
+
+  # disable TLS
+  conf.sub! /^security/, '# security'
+  conf.gsub! /^TLS/, '# TLS'
+
+  # remove replication servers
+  conf.sub!(/^syncrepl.*?\n\n/m) do |block|
+    block.gsub(/^/, '# ')
+  end
+
+  # remove replication
+  conf.sub! /^mirrormode/, '# mirrormode'
+  conf.sub! /^overlay syncprov/, '# overlay syncprov'
+  conf.sub!(/^moduleload.*/) do |line|
+    "<%- if mod == 'syncprov' -%>\n# #{line}\n" +
+    "<%- else -%>\n#{line}\n<%- end -%>"
+  end
+
+  File.write('modules/ldapserver/templates/slapd.conf.erb', conf)
+end
+
 # provision updates
 if `vagrant status`.include? 'running'
   system 'vagrant provision'
