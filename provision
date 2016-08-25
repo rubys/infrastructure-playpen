@@ -137,6 +137,15 @@ if node['classes'] and node['classes'].include? 'ldapserver'
   end
 
   File.write('modules/ldapserver/templates/slapd.conf.erb', conf)
+
+  File.write('ldap_import', 
+    "sudo rm -f /var/lib/ldap/*.mdb\n" +
+    "sudo sed -i -e 's|^uri.*|uri ldap://localhost/|' /etc/ldap/ldap.conf\n" +
+    "sudo service slapd restart\n" +
+    "ldapsearch -x -LLL -H ldaps://themis.apache.org/ | " +
+    "ldapadd -x -H ldap://localhost/ -D cn=root,dc=apache,dc=org -w password\n")
+
+  FileUtils.chmod 0755, 'ldap_import'
 end
 
 # provision updates
