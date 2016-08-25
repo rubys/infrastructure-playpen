@@ -117,7 +117,7 @@ if node['classes'] and node['classes'].include? 'ldapserver'
   conf = File.read('modules/ldapserver/templates/slapd.conf.erb')
 
   # set rootpw to 'password'
-  conf.sub! '<%= rootpw %>', '{SSHA}COYnLoyStL8yU/QSJGLvM6UV7s3rccAI'
+  conf.sub! '<%= rootpw %>', 'password'
 
   # disable TLS
   conf.sub! /^security/, '# security'
